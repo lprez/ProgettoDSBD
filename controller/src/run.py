@@ -1,7 +1,8 @@
 from uuid import uuid4
 from flask import Flask, jsonify, request
 from servicestore import ServiceStore, ServiceNotFoundException, OptionNotFoundException
-from serviceprovider import ServiceProvider, Option
+from serviceprovider import ServiceProvider, Option, OptionInstallException
+from resources import OptionParseException
 
 import os
 import subprocess
@@ -94,3 +95,11 @@ def handle_service_not_found(e):
 @app.errorhandler(OptionNotFoundException)
 def handle_option_not_found(e):
     return str(e), 404
+
+@app.errorhandler(OptionInstallException)
+def handle_option_install_exception(e):
+    return str(e), 500
+
+@app.errorhandler(OptionParseException)
+def handle_option_parse_exception(e):
+    return str(e), 500
