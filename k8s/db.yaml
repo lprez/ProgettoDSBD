@@ -1,0 +1,69 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: neo4j
+spec:
+  ports:
+    - port: 7474
+      name: http
+    - port: 7687
+      name: bolt
+  selector:
+    app: neo4j
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: neo4j
+spec:
+  selector:
+    matchLabels:
+      app: neo4j
+  template:
+    metadata:
+      labels:
+        app: neo4j
+    spec:
+      containers:
+        - name: neo4j
+          image: neo4j:4.2
+          restartPolicy: Always
+          ports:
+            - containerPort: 7474
+            - containerPort: 7687
+            #- containerPort: 7473
+          envFrom:
+            - secretRef:
+                name: neo4j-secret
+          volumeMounts:
+              - mountPath: /data
+                name: neo4j-data
+      volumes:
+        - name: neo4j-data
+          persistentVolumeClaim:
+            claimName: pv-neo4j-data-claim
+
+---
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: pv-neo4j-data
+spec:
+  capacity:
+    storage: 100Mi
+  accessModes:
+    - ReadWriteOnce
+  hostPath:
+    path: /data
+    type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: pv-neo4j-data-claim
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 100Mi
