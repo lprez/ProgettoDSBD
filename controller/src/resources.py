@@ -74,8 +74,9 @@ class Resources:
             elif res["kind"] == "StatefulSet":
                 statefulsets.append((res["metadata"]["name"], res["spec"]))
             elif res["kind"] == "PersistentVolumeClaim":
-                pvcs[res["metadata"]["name"]] = mem_to_float(
-                        res["spec"]["resources"]["requests"]["storage"])
+                pvc_storage = mem_to_float(res["spec"]["resources"]["requests"]["storage"])
+                storage += pvc_storage
+                pvcs[res["metadata"]["name"]] = pvc_storage
 
         pod_resources = [PodResources.from_pod_spec(name, spec, pvcs) for name, spec in pods]
         for ps in [PodResources.from_deployment_spec(name, spec, pvcs) for name, spec in deployments]:
@@ -86,7 +87,6 @@ class Resources:
         for pod_resource in pod_resources:
             cpu += pod_resource.cpu
             memory += pod_resource.memory
-            storage += pod_resource.storage
 
         return Resources(utility, cpu, memory, storage, pod_resources)
 
